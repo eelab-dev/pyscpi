@@ -6,6 +6,7 @@ A Python library for communicating with SCPI devices and a helper library for co
 .. toctree::
     :maxdepth: 2
 
+    guide/index.rst
     
 
 Indices and tables

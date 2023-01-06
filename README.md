@@ -49,7 +49,7 @@ print(inst.query('*IDN?'))
 from pyscpi.keysight import osc
 import numpy as np
 
-xdata, ydata = osc.readChannel(inst, 1)
+t, y1 = osc.readChannel(inst, 1)
 ```
 
 ### Plotting oscilloscope waveform
@@ -58,7 +58,7 @@ xdata, ydata = osc.readChannel(inst, 1)
 # %matplotlib ipympl
 import matplotlib.pyplot as plt
 
-plt.plot(xdata, ydata)
+plt.plot(t, y1)
 plt.show()
 ```
 

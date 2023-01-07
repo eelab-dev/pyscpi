@@ -20,6 +20,6 @@ class Instrument:
     def close(self):
         self.s.close()
 
-    def query(self, cmd):
+    def query(self, cmd) -> str:
         self.write(cmd)
         return self.read()

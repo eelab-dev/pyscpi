@@ -1,0 +1,1 @@
+sphinx-build -a ../docs ./temp/docs

@@ -3,7 +3,7 @@ import sys
 import numpy as np
 
 
-def read_fixed_bytes(inst, size):
+def _read_fixed_bytes(inst, size):
     data = inst.read_bytes()
     while len(data) < size:
         data += inst.read_bytes()
@@ -11,29 +11,29 @@ def read_fixed_bytes(inst, size):
     return data
 
 
-# Read a channel from the oscilloscope
-# @param inst The instrument to read from
-# @param channel The channel to read
-# @param points The number of points to read
-# @param runAfter Run the oscilloscope after reading
-# @return xdata, ydata
+def readChannel(inst: scpi.Instrument, channel: int, points: int = 0, runAfter: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    """Reads a channel from the oscilloscope.
 
-def readChannel(inst, channel, points=0, runAfter=True):
-    inst.write(':STOP')
+    :param inst: The instrument object
+    :param channel: The channel to read
+    :param points: The number of points to read. If 0, read all points
+    :param runAfter: Run the oscilloscope after reading
+    :return: A tuple of time and voltage arrays
 
-    inst.write(':WAVeform:FORMat BYTE')
-    inst.write(f':WAVeform:SOURce CHANnel{channel}')
+    """
+
     inst.write(':TIMebase:MODE MAIN')
-    inst.write(':WAVeform:POINts:MODE MAXimum')
 
-    inst.query('*OPC?')
+    inst.write(f':DIGitize CHANnel{channel}')
+    inst.write(':WAVeform:FORMat BYTE')
+    inst.write(':WAVeform:POINts:MODE MAXimum')
 
     if points > 0:
         inst.write(f':WAVeform:POINts {points}')
     else:
         inst.write(':WAVeform:POINts MAXimum')
 
-    #points = int(inst.query(':WAVeform:POINts?'))
+    inst.query('*OPC?')
 
     peram = inst.query(':WAVeform:PREamble?')
     peram = peram.split(',')
@@ -50,7 +50,7 @@ def readChannel(inst, channel, points=0, runAfter=True):
     yref = float(peram[9])
 
     inst.write(':WAVeform:DATA?')
-    data = read_fixed_bytes(inst, int(points))
+    data = _read_fixed_bytes(inst, int(points))
 
     header = data[2:10].decode('utf-8')
     print(header)
@@ -63,11 +63,40 @@ def readChannel(inst, channel, points=0, runAfter=True):
 
     data = np.frombuffer(data, dtype=np.uint8)
 
-    ydata = (data-yref) * yinc + yorg
+    voltCH = (data-yref) * yinc + yorg
 
-    xdata = (np.arange(0, points, 1)-xref) * xinc + xorg
+    time = (np.arange(0, points, 1)-xref) * xinc + xorg
 
     if runAfter:
         inst.write(':RUN')
 
-    return xdata, ydata
+    return time, voltCH
+
+
+def autoScale(inst, channel):
+    inst.write(f':CHANnel{channel}:SCAle:AUTO')
+
+
+def setTimeAxis(inst, scale, offset):
+    inst.write(f':TIMebase:SCALe {scale}')
+    inst.write(f':TIMebase:OFFSet {offset}')
+    inst.query('*OPC?')
+
+
+def setChannelAxis(inst, channel, scale, offset):
+    inst.write(f':CHANnel{channel}:SCALe {scale}')
+    inst.write(f':CHANnel{channel}:OFFSet {offset}')
+    inst.query('*OPC?')
+
+
+def setWGenOutput(inst, state):
+    inst.write(f':WGEN:OUTPut {state}')
+    inst.query('*OPC?')
+
+
+def setWGenSin(inst, amp, offset, freq):
+    inst.write('WGEN:FUNCtion SINusoid')
+    inst.write(f':WGEN:VOLTage {amp}')
+    inst.write(f':WGEN:VOLTage:OFFSe {offset}')
+    inst.write(f':WGEN:FREQuency {freq}')
+    inst.query('*OPC?')

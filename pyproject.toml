@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyscpi"
-version = "0.1.0"
+version = "0.2.0"
 authors = [
   { name="Danial Chitnis", email="d.chitnis@ed.ac.uk" },
 ]
@@ -21,3 +21,13 @@ classifiers = [
 [project.urls]
 "Homepage" = "https://github.com/danchitnis/pyscpi/"
 "Bug Tracker" = "https://github.com/danchitnis/pyscpi/issues"
+
+[tool.hatch.build]
+exclude = [
+  "tests",
+  "test/*",
+  "test/**",
+  ".github",
+  "docs",
+  "temp"
+]

@@ -7,9 +7,6 @@ import os
 import sys
 from typing import Any, Dict
 
-# add the demo python code to the path, so that it can be used to demonstrate
-# source links
-sys.path.append(os.path.abspath("./kitchen-sink/demo_py"))
 
 # -- Project information -----------------------------------------------------
 #
@@ -36,8 +33,10 @@ extensions = [
     "sphinx_copybutton",
     "sphinx_design",
     "sphinx_inline_tabs",
+    "autoapi.extension",
+    "sphinx_autodoc_typehints",
 ]
-templates_path = ["_templates"]
+#templates_path = ["_templates"]
 
 # -- Options for extlinks ----------------------------------------------------
 #
@@ -72,7 +71,7 @@ myst_heading_anchors = 3
 #
 
 html_theme = "furo"
-html_title = "Furo"
+html_title = "pyscpi"
 language = "en"
 
 html_static_path = ["_static"]
@@ -106,26 +105,6 @@ html_context: Dict[str, Any] = {}
 # html_show_copyright = False
 # html_last_updated_fmt = ""
 
-RTD_TESTING = False
-if RTD_TESTING or "FURO_RTD_TESTING" in os.environ:
-    del html_theme_options["footer_icons"]
-
-    html_css_files += [
-        "https://assets.readthedocs.org/static/css/readthedocs-doc-embed.css",
-        "https://assets.readthedocs.org/static/css/badge_only.css",
-    ]
-    html_js_files += [
-        "readthedocs-dummy.js",
-        "https://assets.readthedocs.org/static/javascript/readthedocs-doc-embed.js",
-    ]
-    html_context["READTHEDOCS"] = True
-    html_context["current_version"] = "latest"
-    html_context["conf_py_path"] = "/docs/"
-    html_context["display_github"] = True
-    html_context["github_user"] = "danchitnis"
-    html_context["github_repo"] = "pyscpi"
-    html_context["github_version"] = "main"
-    html_context["slug"] = "pyscpi"
 
 FONT_AWESOME_TESTING = False
 if FONT_AWESOME_TESTING:
@@ -143,3 +122,10 @@ if FONT_AWESOME_TESTING:
             "class": "fa-solid fa-github fa-2x",
         },
     ]
+
+autoapi_dirs = ['../pyscpi']
+autoapi_type = "python"
+autoapi_options = ['members', 'undoc-members',
+                   'show-inheritance', 'show-module-summary']
+
+autodoc_typehints = "description"

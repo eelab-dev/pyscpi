@@ -5,3 +5,5 @@ sphinx-design
 sphinx-inline-tabs
 sphinx-tabs
 furo
+sphinx-autoapi
+sphinx-autodoc-typehints

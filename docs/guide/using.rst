@@ -1,4 +1,9 @@
 Using
----------------
+----------------
 
-Tested with Python 2.7.3 and 3.3.2 on Linux and Windows.
+Getting started with Crawler is easy.
+The main class you need to care about is crawler.main.Crawler
+
+pyscpi.scpi
+
+automodule: pyscpi.scpi

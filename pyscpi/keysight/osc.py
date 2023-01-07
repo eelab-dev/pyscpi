@@ -1,9 +1,10 @@
 from .. import scpi
 import sys
 import numpy as np
+import pyvisa as visa
 
 
-def _read_fixed_bytes(inst, size):
+def _read_fixed_bytes(inst: scpi.Instrument | visa.resources.Resource, size: int) -> bytes:
     data = inst.read_bytes()
     while len(data) < size:
         data += inst.read_bytes()
@@ -11,7 +12,7 @@ def _read_fixed_bytes(inst, size):
     return data
 
 
-def readChannel(inst: scpi.Instrument, channel: int, points: int = 0, runAfter: bool = True) -> tuple[np.ndarray, np.ndarray]:
+def readChannel(inst: scpi.Instrument | visa.resources.Resource, channel: int, points: int = 0, runAfter: bool = True) -> tuple[np.ndarray, np.ndarray]:
     """Reads a channel from the oscilloscope.
 
     :param inst: The instrument object
@@ -73,28 +74,28 @@ def readChannel(inst: scpi.Instrument, channel: int, points: int = 0, runAfter: 
     return time, voltCH
 
 
-def autoScale(inst, channel):
+def autoScale(inst: scpi.Instrument | visa.resources.Resource, channel: int) -> None:
     inst.write(f':CHANnel{channel}:SCAle:AUTO')
 
 
-def setTimeAxis(inst, scale, offset):
+def setTimeAxis(inst: scpi.Instrument | visa.resources.Resource, scale: float, offset: float) -> None:
     inst.write(f':TIMebase:SCALe {scale}')
     inst.write(f':TIMebase:OFFSet {offset}')
     inst.query('*OPC?')
 
 
-def setChannelAxis(inst, channel, scale, offset):
+def setChannelAxis(inst: scpi.Instrument | visa.resources.Resource, channel: int, scale: float, offset: float) -> None:
     inst.write(f':CHANnel{channel}:SCALe {scale}')
     inst.write(f':CHANnel{channel}:OFFSet {offset}')
     inst.query('*OPC?')
 
 
-def setWGenOutput(inst, state):
+def setWGenOutput(inst: scpi.Instrument | visa.resources.Resource, state: int | str) -> None:
     inst.write(f':WGEN:OUTPut {state}')
     inst.query('*OPC?')
 
 
-def setWGenSin(inst, amp, offset, freq):
+def setWGenSin(inst: scpi.Instrument | visa.resources.Resource, amp: float, offset: float, freq: float) -> None:
     inst.write('WGEN:FUNCtion SINusoid')
     inst.write(f':WGEN:VOLTage {amp}')
     inst.write(f':WGEN:VOLTage:OFFSe {offset}')

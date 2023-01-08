@@ -74,13 +74,14 @@ def readChannel(inst: scpi.Instrument | visa.resources.Resource, channel: int, p
     return time, voltCH
 
 
-def autoScale(inst: scpi.Instrument | visa.resources.Resource, channel: int) -> None:
-    inst.write(f':CHANnel{channel}:SCAle:AUTO')
+def autoScale(inst: scpi.Instrument | visa.resources.Resource) -> None:
+    inst.write(f':AUToscale')
+    inst.query('*OPC?')
 
 
-def setTimeAxis(inst: scpi.Instrument | visa.resources.Resource, scale: float, offset: float) -> None:
+def setTimeAxis(inst: scpi.Instrument | visa.resources.Resource, scale: float, position: float) -> None:
     inst.write(f':TIMebase:SCALe {scale}')
-    inst.write(f':TIMebase:OFFSet {offset}')
+    inst.write(f':TIMebase:POSition {position}')
     inst.query('*OPC?')
 
 
@@ -98,6 +99,6 @@ def setWGenOutput(inst: scpi.Instrument | visa.resources.Resource, state: int | 
 def setWGenSin(inst: scpi.Instrument | visa.resources.Resource, amp: float, offset: float, freq: float) -> None:
     inst.write('WGEN:FUNCtion SINusoid')
     inst.write(f':WGEN:VOLTage {amp}')
-    inst.write(f':WGEN:VOLTage:OFFSe {offset}')
+    inst.write(f':WGEN:VOLTage:OFFSet {offset}')
     inst.write(f':WGEN:FREQuency {freq}')
     inst.query('*OPC?')

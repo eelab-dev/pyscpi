@@ -9,7 +9,7 @@ inst = scpi.Instrument('192.168.178.50', 5025)
 
 print(inst.query('*IDN?'))
 
-t, y1 = osc.readChannel(inst, 1)
+t, y1 = osc.readSingleChannel(inst, 1)
 
 plt.plot(t, y1)
 plt.show()

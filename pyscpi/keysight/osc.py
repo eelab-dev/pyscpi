@@ -12,20 +12,13 @@ def _read_fixed_bytes(inst: scpi.Instrument | visa.resources.Resource, size: int
     return data
 
 
-def readChannel(inst: scpi.Instrument | visa.resources.Resource, channel: int, points: int = 0, runAfter: bool = True) -> tuple[np.ndarray, np.ndarray]:
-    """Reads a channel from the oscilloscope.
+def _readWaveDate(inst: scpi.Instrument | visa.resources.Resource, channel: int, points: int) -> np.ndarray:
 
-    :param inst: The instrument object
-    :param channel: The channel to read
-    :param points: The number of points to read. If 0, read all points
-    :param runAfter: Run the oscilloscope after reading
-    :return: A NumPy tuple of time and voltage arrays
+    inst.query('*OPC?')
+    inst.write(f':WAVeform:SOURce CHANnel{channel}')
+    inst.query('*OPC?')
+    print('Reading channel ' + str(channel))
 
-    """
-
-    inst.write(':TIMebase:MODE MAIN')
-
-    inst.write(f':DIGitize CHANnel{channel}')
     inst.write(':WAVeform:FORMat BYTE')
     inst.write(':WAVeform:POINts:MODE MAXimum')
 
@@ -42,7 +35,7 @@ def readChannel(inst: scpi.Instrument | visa.resources.Resource, channel: int, p
 
     format = peram[0]
     type = peram[1]
-    points = int(peram[2])
+    ppoints = int(peram[2])
     xinc = float(peram[4])
     xorg = float(peram[5])
     xref = float(peram[6])
@@ -51,7 +44,7 @@ def readChannel(inst: scpi.Instrument | visa.resources.Resource, channel: int, p
     yref = float(peram[9])
 
     inst.write(':WAVeform:DATA?')
-    data = _read_fixed_bytes(inst, int(points))
+    data = _read_fixed_bytes(inst, int(ppoints))
 
     header = data[2:10].decode('utf-8')
     print(header)
@@ -66,7 +59,112 @@ def readChannel(inst: scpi.Instrument | visa.resources.Resource, channel: int, p
 
     voltCH = (data-yref) * yinc + yorg
 
-    time = (np.arange(0, points, 1)-xref) * xinc + xorg
+    return voltCH
+
+
+def readChannels(inst: scpi.Instrument | visa.resources.Resource, channels: list[int], points: int = 0, runAfter: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    """Reads multiple channels from the oscilloscope.
+
+    :param inst: The instrument object
+    :param channels: A list of channels to read eg. [1, 2]
+    :param points: The number of points to read. If 0, read all points
+    :param runAfter: Run the oscilloscope after reading
+    :return: A NumPy tuple of time and voltage arrays
+
+    """
+
+    inst.write(':TIMebase:MODE MAIN')
+
+    channelCommand = 'CHANnel1, CHANnel2'
+    # for channel in channels:
+    #    channelCommand = channelCommand + f'CHANnel{channel}, '
+
+    print(channelCommand)
+
+    inst.write(f':DIGitize {channelCommand}')
+
+    peram = inst.query(':WAVeform:PREamble?')
+    peram = peram.split(',')
+    print(peram)
+
+    format = peram[0]
+    type = peram[1]
+    ppoints = int(peram[2])
+    xinc = float(peram[4])
+    xorg = float(peram[5])
+    xref = float(peram[6])
+
+    allData = np.empty([ppoints, len(channels)])
+
+    for i in range(len(channels)):
+        print(f'Reading channel {channels[i]}')
+        data = _readWaveDate(inst, channels[i], points)
+        allData[:, i] = data
+
+    time = (np.arange(0, ppoints, 1)-xref) * xinc + xorg
+
+    if runAfter:
+        inst.write(':RUN')
+
+    return time, allData
+
+
+def readSingleChannel(inst: scpi.Instrument | visa.resources.Resource, channel: int, points: int = 0, runAfter: bool = True) -> tuple[np.ndarray, np.ndarray]:
+    """Reads a single channel from the oscilloscope.
+
+    :param inst: The instrument object
+    :param channel: The channel to read
+    :param points: The number of points to read. If 0, read all points
+    :param runAfter: Run the oscilloscope after reading
+    :return: A NumPy tuple of time and voltage arrays
+
+    """
+
+    inst.write(':TIMebase:MODE MAIN')
+
+    inst.write(f':DIGitize CHANnel{channel}')
+    inst.write(f':WAVeform:SOURce CHANnel{channel}')
+    inst.write(':WAVeform:FORMat BYTE')
+    inst.write(':WAVeform:POINts:MODE MAXimum')
+
+    if points > 0:
+        inst.write(f':WAVeform:POINts {points}')
+    else:
+        inst.write(':WAVeform:POINts MAXimum')
+
+    inst.query('*OPC?')
+
+    peram = inst.query(':WAVeform:PREamble?')
+    peram = peram.split(',')
+    print(peram)
+
+    format = peram[0]
+    type = peram[1]
+    ppoints = int(peram[2])
+    xinc = float(peram[4])
+    xorg = float(peram[5])
+    xref = float(peram[6])
+    yinc = float(peram[7])
+    yorg = float(peram[8])
+    yref = float(peram[9])
+
+    inst.write(':WAVeform:DATA?')
+    data = _read_fixed_bytes(inst, int(ppoints))
+
+    header = data[2: 10].decode('utf-8')
+    print(header)
+    rpoints = int(header)
+
+    if rpoints != (ppoints):
+        print('ERROR: points mismatch, please investigate')
+
+    data = data[10: -1]
+
+    data = np.frombuffer(data, dtype=np.uint8)
+
+    voltCH = (data-yref) * yinc + yorg
+
+    time = (np.arange(0, ppoints, 1)-xref) * xinc + xorg
 
     if runAfter:
         inst.write(':RUN')

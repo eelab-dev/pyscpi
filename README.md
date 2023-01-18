@@ -80,4 +80,6 @@ There are several ways to connect the instrument to your computer. You can use a
 
 ### Router
 
- 
+## Acknowledgments
+
+Thanks to [Keysight Education](https://www.keysight.com/us/en/industries/education.html) for providing the Smart Bench Essentials educational equipment.

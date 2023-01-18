@@ -1,5 +1,8 @@
 From PyPI (pip)
 ---------------
 
+You can install the library using pip:
 
-Test test Test
+```bash
+python -m pip install pyscpi
+```

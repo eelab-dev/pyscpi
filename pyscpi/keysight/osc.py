@@ -21,12 +21,16 @@ def _readWaveDate(inst, channel: int, points: int, debug: bool = False) -> np.nd
     inst.write(':WAVeform:FORMat BYTE')
     inst.write(':WAVeform:POINts:MODE MAXimum')
 
+    _log('Reading points', debug)
+
     if points > 0:
         inst.write(f':WAVeform:POINts {points}')
     else:
         inst.write(':WAVeform:POINts MAXimum')
 
     inst.query('*OPC?')
+
+    _log('Reading preamble', debug)
 
     peram = inst.query(':WAVeform:PREamble?')
     peram = peram.split(',')
@@ -41,6 +45,8 @@ def _readWaveDate(inst, channel: int, points: int, debug: bool = False) -> np.nd
     yinc = float(peram[7])
     yorg = float(peram[8])
     yref = float(peram[9])
+
+    _log('Reading data', debug)
 
     inst.write(':WAVeform:DATA?')
     data = _read_fixed_bytes(inst, int(ppoints))
@@ -123,7 +129,17 @@ def readSingleChannel(inst, channel: int, points: int = 0, runAfter: bool = True
 
     inst.write(':TIMebase:MODE MAIN')
 
-    voltCH = _readWaveDate(inst, [channel], points, debug)
+    inst.write(f':DIGitize CHANnel{channel}')
+    inst.write(f':WAVeform:SOURce CHANnel{channel}')
+    inst.write(':WAVeform:FORMat BYTE')
+    inst.write(':WAVeform:POINts:MODE MAXimum')
+
+    if points > 0:
+        inst.write(f':WAVeform:POINts {points}')
+    else:
+        inst.write(':WAVeform:POINts MAXimum')
+
+    inst.query('*OPC?')
 
     peram = inst.query(':WAVeform:PREamble?')
     peram = peram.split(',')
@@ -138,6 +154,24 @@ def readSingleChannel(inst, channel: int, points: int = 0, runAfter: bool = True
     yinc = float(peram[7])
     yorg = float(peram[8])
     yref = float(peram[9])
+
+    _log('Reading data', debug)
+
+    inst.write(':WAVeform:DATA?')
+    data = _read_fixed_bytes(inst, int(ppoints))
+
+    header = data[2:10].decode('utf-8')
+    _log(header, debug)
+    rpoints = int(header)
+
+    if rpoints != (ppoints):
+        print('ERROR: points mismatch, please investigate')
+
+    data = data[10:-1]
+
+    data = np.frombuffer(data, dtype=np.uint8)
+
+    voltCH = (data-yref) * yinc + yorg
 
     time = (np.arange(0, ppoints, 1)-xref) * xinc + xorg
 

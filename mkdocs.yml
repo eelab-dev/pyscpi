@@ -5,8 +5,17 @@
 
 site_name: pyscpi
 
+repo_url: https://github.com/danchitnis/pyscpi
+
+repo_name: danchitnis/pyscpi
+
 theme:
   name: "material"
+  features:
+    - navigation.instant
+    - navigation.tracking
+  icon:
+    repo: fontawesome/brands/github
   palette:
     # Palette toggle for light mode
     - media: "(prefers-color-scheme: light)"

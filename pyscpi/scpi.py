@@ -15,7 +15,7 @@ class Instrument:
     def read(self) -> str:
         return self.s.recv(1024).decode('utf-8')
 
-    def read_bytes(self) -> bytes:
+    def read_bytes(self, size) -> bytes:
         return self.s.recv(1024)
 
     def close(self) -> None:

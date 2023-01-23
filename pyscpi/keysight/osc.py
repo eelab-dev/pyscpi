@@ -4,9 +4,9 @@ import numpy as np
 
 
 def _read_fixed_bytes(inst, size: int) -> bytes:
-    data = inst.read_bytes()
+    data = inst.read_bytes(size)
     while len(data) < size:
-        data += inst.read_bytes()
+        data += inst.read_bytes(size-len(data))
 
     return data
 

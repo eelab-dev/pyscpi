@@ -1,14 +1,81 @@
-from .. import scpi
-import sys
 import numpy as np
+from dataclasses import dataclass
 
 
-def _read_fixed_bytes(inst, size: int) -> bytes:
-    data = inst.read_bytes(size)
-    while len(data) < size:
-        data += inst.read_bytes(size-len(data))
+@dataclass
+class Preamble:
+    """A class to store the preamble data from the oscilloscope channel.
+
+    :param format: The format of the data
+    :param type: The type of the data
+    :param points: The number of points
+    :param xinc: The x increment
+    :param xorg: The x origin
+    :param xref: The x reference
+    :param yinc: The y increment
+    :param yorg: The y origin
+    :param yref: The y reference
+    """
+
+    format: str
+    type: str
+    points: int
+    xinc: float
+    xorg: float
+    xref: float
+    yinc: float
+    yorg: float
+    yref: float
+
+
+def getPreamble(inst, debug: bool = False) -> Preamble:
+    """Reads the preamble from the oscilloscope.
+
+    :param inst: The instrument object from pyscpi or pyvisa
+    :param debug: Print debug messages
+    :return: A Preamble object
+
+    """
+
+    peram = inst.query(':WAVeform:PREamble?')
+    peram = peram.split(',')
+    _log(peram, debug)
+
+    pre = Preamble(peram[0], peram[1], int(peram[2]), float(peram[4]), float(
+        peram[5]), float(peram[6]), float(peram[7]), float(peram[8]), float(peram[9]))
+
+    return pre
+
+
+def _read_large_raw_bytes(inst, debug) -> bytes:
+    chunk_size = 1024
+    data = inst.read_raw(chunk_size)
+    header = data[2:10].decode('utf-8')
+    _log(header, debug)
+
+    hpoints = int(header)
+
+    while len(data) - len(header) < hpoints:
+        data += inst.read_raw(chunk_size)
 
     return data
+
+
+def _read_large_data_bytes_np(inst, debug) -> bytes:
+    chunk_size = 1024
+    data = inst.read_raw(chunk_size)
+    np.frombuffer(data[10:], dtype=np.uint8)
+    header = data[2:10].decode('utf-8')
+    data = np.frombuffer(data[10:], dtype=np.uint8)
+    _log(header, debug)
+
+    hpoints = int(header)
+
+    while len(data) < hpoints:
+        data = np.append(data, np.frombuffer(
+            inst.read_raw(chunk_size), dtype=np.uint8))
+
+    return data[:-1]
 
 
 def _readWaveDate(inst, channel: int, points: int, debug: bool = False) -> np.ndarray:
@@ -30,41 +97,12 @@ def _readWaveDate(inst, channel: int, points: int, debug: bool = False) -> np.nd
 
     inst.query('*OPC?')
 
-    _log('Reading preamble', debug)
-
-    peram = inst.query(':WAVeform:PREamble?')
-    peram = peram.split(',')
-    _log(peram, debug)
-
-    format = peram[0]
-    type = peram[1]
-    ppoints = int(peram[2])
-    xinc = float(peram[4])
-    xorg = float(peram[5])
-    xref = float(peram[6])
-    yinc = float(peram[7])
-    yorg = float(peram[8])
-    yref = float(peram[9])
-
     _log('Reading data', debug)
 
     inst.write(':WAVeform:DATA?')
-    data = _read_fixed_bytes(inst, int(ppoints))
+    data = _read_large_data_bytes_np(inst, debug)
 
-    header = data[2:10].decode('utf-8')
-    _log(header, debug)
-    rpoints = int(header)
-
-    if rpoints != (ppoints):
-        print('ERROR: points mismatch, please investigate')
-
-    data = data[10:-1]
-
-    data = np.frombuffer(data, dtype=np.uint8)
-
-    voltCH = (data-yref) * yinc + yorg
-
-    return voltCH
+    return data
 
 
 def readChannels(inst, channels: list[int], points: int = 0, runAfter: bool = True, debug: bool = False) -> tuple[np.ndarray, np.ndarray]:
@@ -85,34 +123,33 @@ def readChannels(inst, channels: list[int], points: int = 0, runAfter: bool = Tr
     for channel in channels:
         channelCommand = channelCommand + f'CHANnel{channel}, '
 
+    channelCommand = channelCommand[:-2]
+
     _log(channelCommand, debug)
 
     inst.write(f':DIGitize {channelCommand}')
 
-    peram = inst.query(':WAVeform:PREamble?')
-    peram = peram.split(',')
-    _log(peram, debug)
+    inst.write(f':WAVeform:SOURce CHANnel{channels[0]}')
 
-    format = peram[0]
-    type = peram[1]
-    ppoints = int(peram[2])
-    xinc = float(peram[4])
-    xorg = float(peram[5])
-    xref = float(peram[6])
+    pream = getPreamble(inst, debug)
 
-    allData = np.empty([ppoints, len(channels)])
+    allData = np.empty([pream.points, len(channels)])
 
     for i in range(len(channels)):
         _log(f'Reading channel {channels[i]}', debug)
         data = _readWaveDate(inst, channels[i], points)
+        if len(data) != (pream.points):
+            print('ERROR: points mismatch, please investigate')
         allData[:, i] = data
 
-    time = (np.arange(0, ppoints, 1)-xref) * xinc + xorg
+    voltCH = (allData-pream.yref) * pream.yinc + pream.yorg
+
+    time = (np.arange(0, pream.points, 1)-pream.xref) * pream.xinc + pream.xorg
 
     if runAfter:
         inst.write(':RUN')
 
-    return time, allData
+    return time, voltCH
 
 
 def readSingleChannel(inst, channel: int, points: int = 0, runAfter: bool = True, debug: bool = False) -> tuple[np.ndarray, np.ndarray]:
@@ -141,39 +178,20 @@ def readSingleChannel(inst, channel: int, points: int = 0, runAfter: bool = True
 
     inst.query('*OPC?')
 
-    peram = inst.query(':WAVeform:PREamble?')
-    peram = peram.split(',')
-    _log(peram, debug)
-
-    format = peram[0]
-    type = peram[1]
-    ppoints = int(peram[2])
-    xinc = float(peram[4])
-    xorg = float(peram[5])
-    xref = float(peram[6])
-    yinc = float(peram[7])
-    yorg = float(peram[8])
-    yref = float(peram[9])
+    pream = getPreamble(inst, debug)
 
     _log('Reading data', debug)
 
     inst.write(':WAVeform:DATA?')
-    data = _read_fixed_bytes(inst, int(ppoints))
 
-    header = data[2:10].decode('utf-8')
-    _log(header, debug)
-    rpoints = int(header)
+    data = _read_large_data_bytes_np(inst, debug)
 
-    if rpoints != (ppoints):
+    if len(data) != (pream.points):
         print('ERROR: points mismatch, please investigate')
 
-    data = data[10:-1]
+    voltCH = (data-pream.yref) * pream.yinc + pream.yorg
 
-    data = np.frombuffer(data, dtype=np.uint8)
-
-    voltCH = (data-yref) * yinc + yorg
-
-    time = (np.arange(0, ppoints, 1)-xref) * xinc + xorg
+    time = (np.arange(0, pream.points, 1)-pream.xref) * pream.xinc + pream.xorg
 
     if runAfter:
         inst.write(':RUN')

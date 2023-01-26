@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "pyscpi"
-version = "0.4.1"
+version = "0.4.5"
 authors = [
   { name="Danial Chitnis", email="d.chitnis@ed.ac.uk" },
 ]
@@ -29,5 +29,6 @@ exclude = [
   "test/**",
   ".github",
   "docs",
-  "temp"
+  "temp",
+  "examples",
 ]

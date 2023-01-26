@@ -19,7 +19,7 @@ You don't need to install any drivers or libraries. You can use the standard TCP
 You can install the library using pip:
 
 ```bash
-python -m pip install pyscpi
+python -m pip install --upgrade pyscpi
 ```
 
 ### connecting to the instrument using PyVisa

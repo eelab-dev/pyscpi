@@ -773,6 +773,10 @@ class Instrument(object):
             if self.advantest_quirk and not was_locked:
                 self.unlock()
 
+    def query(self, message):
+        "Write then read string"
+        return self.ask(message)
+
     def read_stb(self):
         "Read status byte"
 

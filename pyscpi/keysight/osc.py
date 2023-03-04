@@ -268,7 +268,7 @@ def setWGenSquare(inst, v0: float, v1: float, freq: float, dutyCycle: int) -> No
     :param inst: The instrument object from pyscpi or pyvisa
     :param v0: The voltage of the low state in volts
     :param v1: The voltage of the high state in volts
-    :param freq: The frequency of the square wave in Hz. The frequency can be adjusted from 100 mHz to 20 MHz.
+    :param freq: The frequency of the square wave in Hz. The frequency can be adjusted from 100 mHz to 10 MHz.
     :param dutyCycle: The duty cycle can be adjusted from 1% to 99% up to 500 kHz. At higher frequencies, the adjustment range narrows so as not to allow pulse widths less than 20 ns.
     """
 

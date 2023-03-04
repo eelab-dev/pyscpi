@@ -268,7 +268,6 @@ def setWGenSquare(inst, v0: float, v1: float, freq: float, dutyCycle: int) -> No
     :param inst: The instrument object from pyscpi or pyvisa
     :param v0: The voltage of the low state in volts
     :param v1: The voltage of the high state in volts
-    :param offset: The offset of the square wave in volts
     :param freq: The frequency of the square wave in Hz. The frequency can be adjusted from 100 mHz to 20 MHz.
     :param dutyCycle: The duty cycle can be adjusted from 1% to 99% up to 500 kHz. At higher frequencies, the adjustment range narrows so as not to allow pulse widths less than 20 ns.
     """
@@ -287,7 +286,6 @@ def setWGenRamp(inst, v0: float, v1: float, freq: float, symmetry: int) -> None:
     :param inst: The instrument object from pyscpi or pyvisa
     :param v0: The voltage of the low state in volts
     :param v1: The voltage of the high state in volts
-    :param offset: The offset of the ramp wave in volts
     :param freq: The frequency of the ramp wave in Hz. The frequency can be adjusted from 100 mHz to 100 kHz.
     :param symmetry: Symmetry represents the amount of time per cycle that the ramp waveform is rising and can be adjusted from 0% to 100%.
     """
@@ -306,7 +304,6 @@ def setWGenPulse(inst, v0: float, v1: float, period: float, pulseWidth: float) -
     :param inst: The instrument object from pyscpi or pyvisa
     :param v0: The voltage of the low state in volts
     :param v1: The voltage of the high state in volts
-    :param offset: The offset of the pulse wave in volts
     :param period: The period of the pulse wave in seconds. The period can be adjusted from 10 ns to 10 s.
     :param pulseWidth: The pulse width can be adjusted from 20 ns to the period minus 20 ns.
     """

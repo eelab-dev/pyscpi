@@ -262,7 +262,7 @@ def setWGenSin(inst, amp: float, offset: float, freq: float) -> None:
     inst.query('*OPC?')
 
 
-def setWGenSquare(inst, v0: float, v1: float, offset: float, freq: float, dutyCycle: int) -> None:
+def setWGenSquare(inst, v0: float, v1: float, freq: float, dutyCycle: int) -> None:
     """Sets the waveform generator to a square wave. (Only available on specific models)
 
     :param inst: The instrument object from pyscpi or pyvisa
@@ -276,13 +276,12 @@ def setWGenSquare(inst, v0: float, v1: float, offset: float, freq: float, dutyCy
     inst.write('WGEN:FUNCtion SQUare')
     inst.write(f':WGEN:VOLTage:LOW {v0}')
     inst.write(f':WGEN:VOLTage:HIGH {v1}')
-    inst.write(f':WGEN:VOLTage:OFFSet {offset}')
     inst.write(f':WGEN:FREQuency {freq}')
     inst.write(f':WGEN:FUNCtion:SQUare:DCYCle {dutyCycle}')
     inst.query('*OPC?')
 
 
-def setWGenRamp(inst, v0: float, v1: float, offset: float, freq: float, symmetry: float) -> None:
+def setWGenRamp(inst, v0: float, v1: float, freq: float, symmetry: int) -> None:
     """Sets the waveform generator to a ramp wave. (Only available on specific models)
 
     :param inst: The instrument object from pyscpi or pyvisa
@@ -296,27 +295,25 @@ def setWGenRamp(inst, v0: float, v1: float, offset: float, freq: float, symmetry
     inst.write('WGEN:FUNCtion RAMP')
     inst.write(f':WGEN:VOLTage:LOW {v0}')
     inst.write(f':WGEN:VOLTage:HIGH {v1}')
-    inst.write(f':WGEN:VOLTage:OFFSet {offset}')
     inst.write(f':WGEN:FREQuency {freq}')
     inst.write(f':WGEN:FUNCtion:RAMP:SYMMetry {symmetry}')
     inst.query('*OPC?')
 
 
-def setWGenPulse(inst, v0: float, v1: float, offset: float, period: float, pulseWidth: float) -> None:
+def setWGenPulse(inst, v0: float, v1: float, period: float, pulseWidth: float) -> None:
     """Sets the waveform generator to a pulse wave. (Only available on specific models)
 
     :param inst: The instrument object from pyscpi or pyvisa
     :param v0: The voltage of the low state in volts
     :param v1: The voltage of the high state in volts
     :param offset: The offset of the pulse wave in volts
-    :param period: The period of the pulse wave in seconds. The period can be adjusted from 10 ns to 100 ns.
+    :param period: The period of the pulse wave in seconds. The period can be adjusted from 10 ns to 10 s.
     :param pulseWidth: The pulse width can be adjusted from 20 ns to the period minus 20 ns.
     """
 
     inst.write('WGEN:FUNCtion PULSe')
     inst.write(f':WGEN:VOLTage:LOW {v0}')
     inst.write(f':WGEN:VOLTage:HIGH {v1}')
-    inst.write(f':WGEN:VOLTage:OFFSet {offset}')
     inst.write(f':WGEN:PERiod {period}')
     inst.write(f':WGEN:FUNCtion:PULSe:WIDTh {pulseWidth}')
     inst.query('*OPC?')
@@ -346,7 +343,6 @@ def setWGenNoise(inst, v0: float, v1: float, offset: float) -> None:
     inst.write('WGEN:FUNCtion NOISe')
     inst.write(f':WGEN:VOLTage:LOW {v0}')
     inst.write(f':WGEN:VOLTage:HIGH {v1}')
-    inst.write(f':WGEN:VOLTage:OFFSet {offset}')
     inst.query('*OPC?')
 
 

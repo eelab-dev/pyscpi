@@ -17,6 +17,12 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  "numpy",
+]
+
+[project.optional-dependencies]
+usb = ["pyusb"]
 
 [project.urls]
 "Homepage" = "https://github.com/danchitnis/pyscpi/"

@@ -22,6 +22,12 @@ You can install the library using pip:
 python -m pip install --upgrade pyscpi
 ```
 
+In case you intend to use the USBTMC backend the extra `usb` will also install the pyusb dependency for you:
+
+```bash
+python -m pip install pyscpi[usb]
+```
+
 ### connecting to the instrument using PyVisa
 
 ```python
